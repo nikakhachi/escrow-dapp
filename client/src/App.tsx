@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import deploy from "./deploy";
+import EscrowJson from "./artifacts/contracts/Escrow.sol/Escrow.json";
 import Escrow, { EscrowProps } from "./Escrow";
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -26,7 +26,9 @@ function App() {
   }, [account]);
 
   async function newContract() {
-    const escrowContract = await deploy(signer, arbiter, beneficiary, ethers.BigNumber.from(depositAmountInWei));
+    if (!signer) return alert("Signer Not Found");
+    const factory = new ethers.ContractFactory(EscrowJson.abi, EscrowJson.bytecode, signer);
+    const escrowContract = await factory.deploy(arbiter, beneficiary, { value: ethers.BigNumber.from(depositAmountInWei) });
 
     const escrow = {
       address: escrowContract.address,
@@ -43,36 +45,32 @@ function App() {
       <div className="contract">
         <h1> New Contract </h1>
         <label>
-          Arbiter Address
-          <input type="text" value={arbiter} onChange={(e) => setArbiter(e.target.value)} />
+          Arbiter Address <input type="text" value={arbiter} onChange={(e) => setArbiter(e.target.value)} />
         </label>
-
         <label>
-          Beneficiary Address
-          <input type="text" value={beneficiary} onChange={(e) => setBeneficiary(e.target.value)} />
+          Beneficiary Address <input type="text" value={beneficiary} onChange={(e) => setBeneficiary(e.target.value)} />
         </label>
-
         <label>
-          Deposit Amount (in Wei)
-          <input type="text" value={depositAmountInWei} onChange={(e) => setDepositAmountInWei(Number(e.target.value))} />
+          Deposit Amount <input type="text" value={depositAmountInWei} onChange={(e) => setDepositAmountInWei(Number(e.target.value))} />
         </label>
-
-        <div
-          className="button"
-          id="deploy"
-          onClick={(e) => {
-            e.preventDefault();
-
-            newContract();
-          }}
-        >
-          Deploy
-        </div>
+        {signer ? (
+          <div
+            className="button"
+            id="deploy"
+            onClick={(e) => {
+              e.preventDefault();
+              newContract();
+            }}
+          >
+            Deploy
+          </div>
+        ) : (
+          <p>Connect with Wallet to Get Started</p>
+        )}
       </div>
 
       <div className="existing-contracts">
         <h1> Existing Contracts </h1>
-
         <div id="container">
           {escrows.map((escrow) => {
             return <Escrow key={escrow.address} {...escrow} />;
