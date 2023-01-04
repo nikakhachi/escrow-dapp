@@ -1,6 +1,13 @@
 import React from "react";
 
-const Escrow = ({ address, arbiter, beneficiary, value, handleApprove }) => {
+export interface EscrowProps {
+  address: string;
+  arbiter: string;
+  beneficiary: string;
+  value: number | string;
+}
+
+const Escrow: React.FC<EscrowProps> = ({ address, arbiter, beneficiary, value }) => {
   return (
     <div className="existing-contract">
       <ul className="fields">
@@ -21,8 +28,6 @@ const Escrow = ({ address, arbiter, beneficiary, value, handleApprove }) => {
           id={address}
           onClick={(e) => {
             e.preventDefault();
-
-            handleApprove();
           }}
         >
           Approve
