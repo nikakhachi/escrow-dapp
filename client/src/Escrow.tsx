@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import React from "react";
 
 export interface EscrowProps {
@@ -5,9 +6,10 @@ export interface EscrowProps {
   arbiter: string;
   beneficiary: string;
   value: number | string;
+  approve: () => void;
 }
 
-const Escrow: React.FC<EscrowProps> = ({ address, arbiter, beneficiary, value }) => {
+const Escrow: React.FC<EscrowProps> = ({ address, arbiter, beneficiary, value, approve }) => {
   return (
     <div className="existing-contract">
       <ul className="fields">
@@ -28,6 +30,7 @@ const Escrow: React.FC<EscrowProps> = ({ address, arbiter, beneficiary, value })
           id={address}
           onClick={(e) => {
             e.preventDefault();
+            approve();
           }}
         >
           Approve
