@@ -28,7 +28,7 @@ contract EscrowAgent {
     }
 
     modifier differentBuyerAndSeller(address _seller, address _buyer) {
-        require(_seller != _buyer, "Buyer and Sellet should be Different");
+        require(_seller != _buyer, "Buyer and Seller should be Different");
         _;
     }
 
@@ -79,6 +79,10 @@ contract EscrowAgent {
 
     function getAllEscrows() external view returns (Escrow[] memory){
         return escrows;
+    }
+
+    function getEscrowById(uint _escrowId) external view returns (Escrow memory){
+        return escrows[_escrowId];
     }
 
     function changeAgentFeePercentage(uint8 _newFeePercentage) external onlyAgent {
