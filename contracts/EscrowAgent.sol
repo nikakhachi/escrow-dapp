@@ -65,7 +65,7 @@ contract EscrowAgent {
     function approveEscrow(uint _escrowId) external onlyAgent {
         Escrow storage escrow = escrows[_escrowId];
         require(escrow.status == EscrowStatus.DEPOSITED, "You can only approve Escrow with deposited status");
-        uint agentFee = escrow.depositAmount * agentFeePercentage / 100;
+        uint agentFee = escrow.depositAmount * escrow.agentFeePercentage / 100;
         (bool sent,) = escrow.seller.call{value: escrow.depositAmount - agentFee}("");
         require(sent, "Failed to send Ether");
         escrow.status = EscrowStatus.APPROVED;
