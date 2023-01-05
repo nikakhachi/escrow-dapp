@@ -1,5 +1,9 @@
 import { createContext, useState, PropsWithChildren, useEffect } from "react";
 import { ethers } from "ethers";
+import EscrowAgentJson from "../artifacts/contracts/EscrowAgent.sol/EscrowAgent.json";
+import { Escrow } from "../types";
+
+const CONTRACT_ADDRESS = "0xeceb490B60Fa57E2230bAe4c6e6d3Fa0445f2C66";
 
 type EscrowAgentContextType = {
   metamaskWallet: any;
@@ -9,6 +13,9 @@ type EscrowAgentContextType = {
   getSigner: () => ethers.providers.JsonRpcSigner;
   checkIfNetworkIsGoerli: () => Promise<boolean>;
   isNetworkGoerli: boolean | undefined;
+  escrows: Escrow[];
+  areEscrowsLoading: boolean;
+  fetchAndUpdateEscrows: () => void;
 };
 
 export const EscrowAgentContext = createContext<EscrowAgentContextType | null>(null);
@@ -18,6 +25,10 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
   const [metamaskAccount, setMetamaskAccount] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [isNetworkGoerli, setIsNetworkGoerli] = useState<boolean>();
+  const [contract, setContract] = useState<ethers.Contract>();
+  const [isMining, setIsMining] = useState(false);
+  const [escrows, setEscrows] = useState<Escrow[]>([]);
+  const [areEscrowsLoading, setAreEscrowsLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -26,6 +37,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
         setMetamaskAccount(account);
         await checkIfNetworkIsGoerli();
         setIsLoading(false);
+        fetchAndUpdateEscrows();
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,6 +92,40 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     return network.name === "goerli";
   };
 
+  //
+  //
+  // CONTRACT FUNCTIONS BELOW
+  //
+  //
+
+  const getContract = (signer: ethers.Signer | ethers.providers.Provider | undefined): ethers.Contract => {
+    if (contract) return contract;
+    const fetchedContract = new ethers.Contract(CONTRACT_ADDRESS, EscrowAgentJson.abi, signer);
+    setContract(fetchedContract);
+    return fetchedContract;
+  };
+
+  const fetchAndUpdateEscrows = async () => {
+    setAreEscrowsLoading(true);
+    const contract = getContract(getSigner());
+    const escrowsRaw = await contract.getAllEscrows();
+    const escrows = escrowsRaw
+      .map((item: any) => ({
+        seller: item.seller,
+        buyer: item.buyer,
+        id: item.id.toNumber(),
+        depositAmountInEth: Number(ethers.utils.formatEther(item.depositAmount)),
+        status: item.status,
+        agentFeePercentage: item.agentFeePercentage,
+        description: item.description,
+        createdAt: new Date(item.createdAt.toNumber() * 1000),
+        updatedAt: new Date(item.updatedAt.toNumber() * 1000),
+      }))
+      .sort((a: Escrow, b: Escrow) => b.updatedAt.valueOf() - a.updatedAt.valueOf());
+    setEscrows(escrows);
+    setAreEscrowsLoading(false);
+  };
+
   const value = {
     metamaskWallet,
     metamaskAccount,
@@ -88,6 +134,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     getSigner,
     checkIfNetworkIsGoerli,
     isNetworkGoerli,
+    escrows,
+    areEscrowsLoading,
+    fetchAndUpdateEscrows,
   };
 
   return <EscrowAgentContext.Provider value={value}>{children}</EscrowAgentContext.Provider>;

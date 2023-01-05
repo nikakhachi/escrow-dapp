@@ -1,5 +1,10 @@
 import { useContext } from "react";
 import { EscrowAgentContext } from "./contexts/EscrowAgentContext";
+import { ConnectMetamaskView } from "./views/ConnectMetamaskView";
+import { HomeView } from "./views/HomeView";
+import { InvalidNetworkView } from "./views/InvalidNetworkView";
+import { LoadingView } from "./views/LoadingView";
+import { NoMetamaskView } from "./views/NoMetamaskView";
 
 function App() {
   const escrowAgentContext = useContext(EscrowAgentContext);
@@ -7,17 +12,17 @@ function App() {
   return (
     <div>
       {!escrowAgentContext?.metamaskWallet ? (
-        <p>no metamask</p>
+        <NoMetamaskView />
       ) : escrowAgentContext?.isLoading ? (
-        <p>loading</p>
+        <LoadingView />
       ) : !escrowAgentContext?.metamaskAccount ? (
-        <p onClick={escrowAgentContext.connectToWallet}>connect to metamask</p>
+        <ConnectMetamaskView />
       ) : escrowAgentContext.isNetworkGoerli === undefined ? (
-        <p>loading</p>
+        <LoadingView />
       ) : escrowAgentContext.isNetworkGoerli === false ? (
-        <p>switch to goerli network</p>
+        <InvalidNetworkView />
       ) : (
-        <p>home</p>
+        <HomeView />
       )}
     </div>
   );
