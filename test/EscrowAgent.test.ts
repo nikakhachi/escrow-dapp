@@ -164,13 +164,13 @@ describe("Escrow Agent Contract", function () {
     it("reject escrow", async () => {
       const escrow = escrowData[1];
       await contract.connect(escrow.buyer).depositEscrow(escrow.id, { value: escrow.depositAmount });
-      let buyersBalanceAfterDeposit = await getBalance(escrow.buyer);
+      let buyersBalanceAfterDeposit = await getBalance(escrow.buyer, true);
       await contract.rejectEscrow(escrow.id);
-      let buyersBalanceAfterRejection = await getBalance(escrow.buyer);
+      let buyersBalanceAfterRejection = await getBalance(escrow.buyer, true);
       const contractBalance = await contractBalanceInWei(contract);
       const rejectedEscrow = await contract.getEscrowById(escrow.id);
       expect(contractBalance).to.eq(0);
-      expect(buyersBalanceAfterDeposit + bigNumberToNumber(escrow.depositAmount)).to.eq(buyersBalanceAfterRejection);
+      expect(buyersBalanceAfterDeposit + Number(ethers.utils.formatEther(escrow.depositAmount))).to.eq(buyersBalanceAfterRejection);
       expect(rejectedEscrow.status).to.eq(EscrowStatus.REJECTED);
     });
   });
@@ -218,5 +218,16 @@ describe("Escrow Agent Contract", function () {
     const withdrawableFunds2 = await contract.withdrawableFunds();
     expect(bigNumberToNumber(withdrawableFunds1)).to.eq((bigNumberToNumber(escrow.depositAmount) * agentFeePercentage) / 100);
     expect(bigNumberToNumber(withdrawableFunds2)).to.eq(0);
+  });
+
+  it("changeAgents", async () => {
+    await contract.changeAgent(user1Address);
+    await expect(contract.initiateEscrow(user2Address, user3Address, parsed5Ether, "test")).to.revertedWith(
+      "Only Agent can call this function"
+    );
+    const newFee = 24;
+    await contract.connect(user1).changeAgentFeePercentage(newFee);
+    const fee = await contract.agentFeePercentage();
+    expect(fee).to.eq(newFee);
   });
 });

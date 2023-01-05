@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
+import "hardhat/console.sol";
 
 contract EscrowAgent {
     address public agent;
@@ -76,7 +77,7 @@ contract EscrowAgent {
     function rejectEscrow(uint _escrowId) external onlyAgent {
         Escrow storage escrow = escrows[_escrowId];
         require(escrow.status == EscrowStatus.DEPOSITED, "You can only reject Escrow with deposited status");
-        (bool sent,) = escrow.buyer.call{value: escrow.depositAmount}("");
+        (bool sent,) = escrow.buyer.call{ value: escrow.depositAmount }("");
         require(sent, "Failed to send Ether");
         escrow.status = EscrowStatus.REJECTED;
         escrow.updatedAt = block.timestamp;
@@ -106,5 +107,9 @@ contract EscrowAgent {
         (bool sent,) = agent.call{value: withdrawableFunds}("");
         require(sent, "Failed to send Ether");    
         withdrawableFunds = 0;
+    }
+
+    function changeAgent(address _newAgent) external onlyAgent {
+        agent = _newAgent;
     }
 }
