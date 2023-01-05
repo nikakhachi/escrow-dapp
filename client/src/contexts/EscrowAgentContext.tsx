@@ -139,7 +139,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
-      console.log(error);
+      alert(error);
     } finally {
       setIsMining(false);
     }
@@ -152,7 +152,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
-      console.log(error);
+      alert(error);
     } finally {
       setIsMining(false);
     }
@@ -165,7 +165,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
-      console.log(error);
+      alert(error);
     } finally {
       setIsMining(false);
     }
@@ -178,7 +178,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
-      console.log(error);
+      alert(error);
     } finally {
       setIsMining(false);
     }
@@ -190,8 +190,8 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       const txn = await contract.depositEscrow(escrowId, { value: ethers.utils.parseEther(String(depositAmountInETH)) });
       setIsMining(true);
       await txn.wait();
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      alert(error);
     } finally {
       setIsMining(false);
     }
