@@ -207,4 +207,16 @@ describe("Escrow Agent Contract", function () {
       expect(fee).to.eq(newFee);
     });
   });
+
+  it("withdrawFunds", async () => {
+    const escrow = escrowData[2];
+    const agentFeePercentage = await contract.agentFeePercentage();
+    await contract.connect(escrow.buyer).depositEscrow(escrow.id, { value: escrow.depositAmount });
+    await contract.approveEscrow(escrow.id);
+    const withdrawableFunds1 = await contract.withdrawableFunds();
+    await contract.withdrawFunds();
+    const withdrawableFunds2 = await contract.withdrawableFunds();
+    expect(bigNumberToNumber(withdrawableFunds1)).to.eq((bigNumberToNumber(escrow.depositAmount) * agentFeePercentage) / 100);
+    expect(bigNumberToNumber(withdrawableFunds2)).to.eq(0);
+  });
 });

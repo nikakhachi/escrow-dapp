@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 contract EscrowAgent {
     address public agent;
     uint8 public agentFeePercentage = 10;
+    uint public withdrawableFunds;
 
     enum EscrowStatus{ PENDING, DEPOSITED, APPROVED, REJECTED, ARCHIVED }
 
@@ -69,6 +70,7 @@ contract EscrowAgent {
         require(sent, "Failed to send Ether");
         escrow.status = EscrowStatus.APPROVED;
         escrow.updatedAt = block.timestamp;
+        withdrawableFunds += agentFee;
     }
 
     function rejectEscrow(uint _escrowId) external onlyAgent {
@@ -98,5 +100,11 @@ contract EscrowAgent {
     function changeAgentFeePercentage(uint8 _newFeePercentage) external onlyAgent {
         require(_newFeePercentage >= 0 && _newFeePercentage < 100, "Value should be non-decimal in range of 0 and 99");
         agentFeePercentage = _newFeePercentage;
+    }
+
+    function withdrawFunds() external onlyAgent {
+        (bool sent,) = agent.call{value: withdrawableFunds}("");
+        require(sent, "Failed to send Ether");    
+        withdrawableFunds = 0;
     }
 }
