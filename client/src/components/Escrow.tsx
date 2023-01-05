@@ -19,6 +19,13 @@ interface IProps {
 const Escrow: React.FC<IProps> = ({ escrow }) => {
   const escrowAgentContext = useContext(EscrowAgentContext);
 
+  const statusColor = (status: EscrowStatus) => {
+    if (status === EscrowStatus.ARCHIVED) return "red";
+    if (status === EscrowStatus.APPROVED) return "green";
+    if (status === EscrowStatus.PENDING) return "blue";
+    if (status === EscrowStatus.REJECTED) return "red";
+  };
+
   return (
     <Card>
       <CardContent>
@@ -49,7 +56,7 @@ const Escrow: React.FC<IProps> = ({ escrow }) => {
           <strong>Updated At:</strong> {moment(escrow.updatedAt).format("DD/MM/YYYY h:mma")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          <strong>Status:</strong> {EscrowStatus[escrow.status]}
+          <strong>Status:</strong> <span style={{ color: statusColor(escrow.status), fontWeight: 800 }}>{EscrowStatus[escrow.status]}</span>
         </Typography>
       </CardContent>
       <CardActions>
