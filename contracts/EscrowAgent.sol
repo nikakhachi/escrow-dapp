@@ -14,6 +14,7 @@ contract EscrowAgent {
         uint depositAmount;
         EscrowStatus status;
         uint8 agentFeePercentage;
+        string description;
     }
 
     Escrow[] public escrows;
@@ -32,7 +33,7 @@ contract EscrowAgent {
         _;
     }
 
-    function initiateEscrow(address _seller, address _buyer, uint _depositAmount) external onlyAgent differentBuyerAndSeller(_seller, _buyer) {
+    function initiateEscrow(address _seller, address _buyer, uint _depositAmount, string memory _description) external onlyAgent differentBuyerAndSeller(_seller, _buyer) {
         uint newEscrowId = escrows.length;
         Escrow memory escrow = Escrow(
                 newEscrowId, 
@@ -40,7 +41,8 @@ contract EscrowAgent {
                 _buyer, 
                 _depositAmount, 
                 EscrowStatus.PENDING, 
-                agentFeePercentage
+                agentFeePercentage,
+                _description
             );
     
         escrows.push(escrow);

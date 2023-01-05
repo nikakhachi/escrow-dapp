@@ -62,7 +62,11 @@ describe("Escrow Agent Contract", function () {
     ];
 
     // Deploy Escrows
-    await Promise.all(escrowData.map((item) => contract.initiateEscrow(item.sellerAddress, item.buyerAddress, item.depositAmount)));
+    await Promise.all(
+      escrowData.map((item) =>
+        contract.initiateEscrow(item.sellerAddress, item.buyerAddress, item.depositAmount, `test escrow #${item.id}`)
+      )
+    );
   });
 
   it("agent should equal contract deployer", async function () {
@@ -72,17 +76,17 @@ describe("Escrow Agent Contract", function () {
 
   describe("initiateEscrow", () => {
     it("forbid as non-agent", async () => {
-      await expect(contract.connect(user2).initiateEscrow(user1Address, user3Address, parsed5Ether)).to.revertedWith(
+      await expect(contract.connect(user2).initiateEscrow(user1Address, user3Address, parsed5Ether, "test")).to.revertedWith(
         "Only Agent can call this function"
       );
     });
     it("don't allow same seller and buyer", async () => {
-      await expect(contract.initiateEscrow(user1Address, user1Address, parsed4Ether)).to.revertedWith(
+      await expect(contract.initiateEscrow(user1Address, user1Address, parsed4Ether, "test")).to.revertedWith(
         "Buyer and Seller should be Different"
       );
     });
     it("escrow should be added to array", async () => {
-      await contract.initiateEscrow(user1Address, user2Address, parsed5Ether);
+      await contract.initiateEscrow(user1Address, user2Address, parsed5Ether, "test");
       const newEscrow = await contract.getEscrowById(3);
       expect(newEscrow.id.toNumber()).to.eq(3);
       expect(newEscrow.seller).to.eq(user1Address);
