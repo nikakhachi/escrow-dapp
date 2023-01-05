@@ -15,6 +15,8 @@ contract EscrowAgent {
         EscrowStatus status;
         uint8 agentFeePercentage;
         string description;
+        uint createdAt;
+        uint updatedAt;
     }
 
     Escrow[] public escrows;
@@ -42,7 +44,9 @@ contract EscrowAgent {
                 _depositAmount, 
                 EscrowStatus.PENDING, 
                 agentFeePercentage,
-                _description
+                _description,
+                block.timestamp,
+                block.timestamp
             );
     
         escrows.push(escrow);
@@ -54,6 +58,7 @@ contract EscrowAgent {
         require(escrow.status == EscrowStatus.PENDING, "Deposit is only allowed on pending Escrow");
         require(msg.value == escrow.depositAmount, "Deposit must be equal to escrow's needed amount");
         escrow.status = EscrowStatus.DEPOSITED;
+        escrow.updatedAt = block.timestamp;
     }
 
     function approveEscrow(uint _escrowId) external onlyAgent {
@@ -63,6 +68,7 @@ contract EscrowAgent {
         (bool sent,) = escrow.seller.call{value: escrow.depositAmount - agentFee}("");
         require(sent, "Failed to send Ether");
         escrow.status = EscrowStatus.APPROVED;
+        escrow.updatedAt = block.timestamp;
     }
 
     function rejectEscrow(uint _escrowId) external onlyAgent {
@@ -71,12 +77,14 @@ contract EscrowAgent {
         (bool sent,) = escrow.buyer.call{value: escrow.depositAmount}("");
         require(sent, "Failed to send Ether");
         escrow.status = EscrowStatus.REJECTED;
+        escrow.updatedAt = block.timestamp;
     }
 
     function archiveEscrow(uint _escrowId) external onlyAgent{
         Escrow storage escrow = escrows[_escrowId];
         require(escrow.status == EscrowStatus.PENDING, "Can't archive active Escrow");
         escrow.status = EscrowStatus.ARCHIVED;
+        escrow.updatedAt = block.timestamp;
     }
 
     function getAllEscrows() external view returns (Escrow[] memory){
