@@ -10,7 +10,7 @@ export const HomeView = () => {
 
   useEffect(() => {
     (async () => {
-      escrowAgentContext?.fetchAndUpdateEscrows();
+      escrowAgentContext?.fetchAndUpdateContractData();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

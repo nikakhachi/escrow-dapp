@@ -15,7 +15,7 @@ type EscrowAgentContextType = {
   isNetworkGoerli: boolean | undefined;
   escrows: EscrowType[];
   areEscrowsLoading: boolean;
-  fetchAndUpdateEscrows: () => void;
+  fetchAndUpdateContractData: () => void;
   initiateEscrow: (seller: string, buyer: string, depositAmountInETH: number, description: string) => void;
   isMining: boolean;
   approveEscrow: (escrowId: number) => void;
@@ -25,6 +25,9 @@ type EscrowAgentContextType = {
   changeAgent: (newAgentAddress: string) => void;
   updateAgentPercentageFee: (newPercentageFee: number) => void;
   withdrawFunds: () => void;
+  currentAgent?: string;
+  currentAgentFeePercentage?: number;
+  withdrawableFundsInETH?: number;
 };
 
 export const EscrowAgentContext = createContext<EscrowAgentContextType | null>(null);
@@ -37,6 +40,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
   const [contract, setContract] = useState<ethers.Contract>();
   const [isMining, setIsMining] = useState(false);
   const [escrows, setEscrows] = useState<EscrowType[]>([]);
+  const [currentAgentFeePercentage, setCurrentAgentFeePercentage] = useState<number>();
+  const [currentAgent, setCurrentAgent] = useState<string>();
+  const [withdrawableFundsInETH, setWithdrawableFundsInETH] = useState<number>();
   const [areEscrowsLoading, setAreEscrowsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,9 +52,15 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
         setMetamaskAccount(account);
         await checkIfNetworkIsGoerli();
         setIsLoading(false);
-        fetchAndUpdateEscrows();
+        fetchAndUpdateContractData();
       }
     })();
+    setTimeout(() => {
+      setIsMining(true);
+      setTimeout(() => {
+        setIsMining(false);
+      }, 5000);
+    }, 2000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -114,7 +126,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     return fetchedContract;
   };
 
-  const fetchAndUpdateEscrows = async () => {
+  const fetchAndUpdateContractData = async () => {
     setAreEscrowsLoading(true);
     const contract = getContract(getSigner());
     const escrowsRaw = await contract.getAllEscrows();
@@ -132,6 +144,12 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       }))
       .sort((a: EscrowType, b: EscrowType) => b.updatedAt.valueOf() - a.updatedAt.valueOf());
     setEscrows(escrows);
+    const currentAgentRes = await contract.agent();
+    const currentAgentFeePercentageRes = await contract.agentFeePercentage();
+    const withdrawableFundsRes = await contract.withdrawableFunds();
+    setCurrentAgent(currentAgentRes);
+    setCurrentAgentFeePercentage(currentAgentFeePercentageRes);
+    setWithdrawableFundsInETH(Number(ethers.utils.formatEther(withdrawableFundsRes)));
     setAreEscrowsLoading(false);
   };
 
@@ -249,7 +267,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     isNetworkGoerli,
     escrows,
     areEscrowsLoading,
-    fetchAndUpdateEscrows,
+    fetchAndUpdateContractData,
     initiateEscrow,
     isMining,
     approveEscrow,
@@ -259,6 +277,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     changeAgent,
     updateAgentPercentageFee,
     withdrawFunds,
+    currentAgent,
+    currentAgentFeePercentage,
+    withdrawableFundsInETH,
   };
 
   return <EscrowAgentContext.Provider value={value}>{children}</EscrowAgentContext.Provider>;

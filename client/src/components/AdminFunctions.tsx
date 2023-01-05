@@ -1,4 +1,4 @@
-import { Grid, TextField, CircularProgress } from "@mui/material";
+import { Grid, TextField, CircularProgress, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useContext, useState } from "react";
 import { EscrowAgentContext } from "../contexts/EscrowAgentContext";
@@ -12,6 +12,17 @@ const AdminFunctions = () => {
 
   return (
     <Grid container item xs={12} spacing={3}>
+      <Grid item xs={12}>
+        <Typography>
+          <strong>Current Agent:</strong> {escrowAgentContext?.currentAgent}
+        </Typography>
+        <Typography>
+          <strong>Current Agent Fee:</strong> {escrowAgentContext?.currentAgentFeePercentage}%
+        </Typography>
+        <Typography>
+          <strong>Withdrawable Funds:</strong> {escrowAgentContext?.withdrawableFundsInETH} ETH
+        </Typography>
+      </Grid>
       <Grid container item xs={12} sm={6} spacing={1}>
         <Grid item xs={12}>
           <TextField
