@@ -1,7 +1,7 @@
 import { createContext, useState, PropsWithChildren, useEffect } from "react";
 import { ethers } from "ethers";
 import EscrowAgentJson from "../artifacts/contracts/EscrowAgent.sol/EscrowAgent.json";
-import { Escrow } from "../types";
+import { EscrowType } from "../types";
 
 const CONTRACT_ADDRESS = "0xeceb490B60Fa57E2230bAe4c6e6d3Fa0445f2C66";
 
@@ -13,9 +13,15 @@ type EscrowAgentContextType = {
   getSigner: () => ethers.providers.JsonRpcSigner;
   checkIfNetworkIsGoerli: () => Promise<boolean>;
   isNetworkGoerli: boolean | undefined;
-  escrows: Escrow[];
+  escrows: EscrowType[];
   areEscrowsLoading: boolean;
   fetchAndUpdateEscrows: () => void;
+  initiateEscrow: (seller: string, buyer: string, depositAmountInETH: number, description: string) => void;
+  isMining: boolean;
+  approveEscrow: (escrowId: number) => void;
+  rejectEscrow: (escrowId: number) => void;
+  archiveEscrow: (escrowId: number) => void;
+  depositEscrow: (escrowId: number, depositAmountInETH: number) => void;
 };
 
 export const EscrowAgentContext = createContext<EscrowAgentContextType | null>(null);
@@ -27,7 +33,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
   const [isNetworkGoerli, setIsNetworkGoerli] = useState<boolean>();
   const [contract, setContract] = useState<ethers.Contract>();
   const [isMining, setIsMining] = useState(false);
-  const [escrows, setEscrows] = useState<Escrow[]>([]);
+  const [escrows, setEscrows] = useState<EscrowType[]>([]);
   const [areEscrowsLoading, setAreEscrowsLoading] = useState(true);
 
   useEffect(() => {
@@ -121,9 +127,74 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
         createdAt: new Date(item.createdAt.toNumber() * 1000),
         updatedAt: new Date(item.updatedAt.toNumber() * 1000),
       }))
-      .sort((a: Escrow, b: Escrow) => b.updatedAt.valueOf() - a.updatedAt.valueOf());
+      .sort((a: EscrowType, b: EscrowType) => b.updatedAt.valueOf() - a.updatedAt.valueOf());
     setEscrows(escrows);
     setAreEscrowsLoading(false);
+  };
+
+  const initiateEscrow = async (seller: string, buyer: string, depositAmountInETH: number, description: string) => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.initiateEscrow(seller, buyer, ethers.utils.parseEther(String(depositAmountInETH)), description);
+      setIsMining(true);
+      await txn.wait();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsMining(false);
+    }
+  };
+
+  const approveEscrow = async (escrowId: number) => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.approveEscrow(escrowId);
+      setIsMining(true);
+      await txn.wait();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsMining(false);
+    }
+  };
+
+  const rejectEscrow = async (escrowId: number) => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.rejectEscrow(escrowId);
+      setIsMining(true);
+      await txn.wait();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsMining(false);
+    }
+  };
+
+  const archiveEscrow = async (escrowId: number) => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.archiveEscrow(escrowId);
+      setIsMining(true);
+      await txn.wait();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsMining(false);
+    }
+  };
+
+  const depositEscrow = async (escrowId: number, depositAmountInETH: number) => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.depositEscrow(escrowId, { value: ethers.utils.parseEther(String(depositAmountInETH)) });
+      setIsMining(true);
+      await txn.wait();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsMining(false);
+    }
   };
 
   const value = {
@@ -137,6 +208,12 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     escrows,
     areEscrowsLoading,
     fetchAndUpdateEscrows,
+    initiateEscrow,
+    isMining,
+    approveEscrow,
+    rejectEscrow,
+    archiveEscrow,
+    depositEscrow,
   };
 
   return <EscrowAgentContext.Provider value={value}>{children}</EscrowAgentContext.Provider>;

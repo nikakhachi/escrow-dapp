@@ -1,4 +1,4 @@
-export type Escrow = {
+export type EscrowType = {
   seller: string;
   buyer: string;
   id: number;
