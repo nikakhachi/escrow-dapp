@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import EscrowAgentJson from "../artifacts/contracts/EscrowAgent.sol/EscrowAgent.json";
 import { EscrowType } from "../types";
 
-const CONTRACT_ADDRESS = "0xeceb490B60Fa57E2230bAe4c6e6d3Fa0445f2C66";
+const CONTRACT_ADDRESS = "0x0EAd999B0fb9D9dd6F64Ef3C83F367B34312913E";
 
 type EscrowAgentContextType = {
   metamaskWallet: any;
@@ -22,6 +22,9 @@ type EscrowAgentContextType = {
   rejectEscrow: (escrowId: number) => void;
   archiveEscrow: (escrowId: number) => void;
   depositEscrow: (escrowId: number, depositAmountInETH: number) => void;
+  changeAgent: (newAgentAddress: string) => void;
+  updateAgentPercentageFee: (newPercentageFee: number) => void;
+  withdrawFunds: () => void;
 };
 
 export const EscrowAgentContext = createContext<EscrowAgentContextType | null>(null);
@@ -197,6 +200,45 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     }
   };
 
+  const changeAgent = async (newAgentAddress: string) => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.changeAgent(newAgentAddress);
+      setIsMining(true);
+      await txn.wait();
+    } catch (error: any) {
+      alert(error);
+    } finally {
+      setIsMining(false);
+    }
+  };
+
+  const updateAgentPercentageFee = async (newPercentageFee: number) => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.changeAgentFeePercentage(newPercentageFee);
+      setIsMining(true);
+      await txn.wait();
+    } catch (error: any) {
+      alert(error);
+    } finally {
+      setIsMining(false);
+    }
+  };
+
+  const withdrawFunds = async () => {
+    try {
+      const contract = getContract(getSigner());
+      const txn = await contract.withdrawFunds();
+      setIsMining(true);
+      await txn.wait();
+    } catch (error: any) {
+      alert(error);
+    } finally {
+      setIsMining(false);
+    }
+  };
+
   const value = {
     metamaskWallet,
     metamaskAccount,
@@ -214,6 +256,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     rejectEscrow,
     archiveEscrow,
     depositEscrow,
+    changeAgent,
+    updateAgentPercentageFee,
+    withdrawFunds,
   };
 
   return <EscrowAgentContext.Provider value={value}>{children}</EscrowAgentContext.Provider>;
