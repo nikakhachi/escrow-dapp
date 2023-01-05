@@ -1,3 +1,4 @@
+import "@nomiclabs/hardhat-waffle";
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
