@@ -61,6 +61,14 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (isMining) {
+      document.body.style.overflowY = "hidden";
+    } else {
+      document.body.style.overflowY = "scroll";
+    }
+  }, [isMining]);
+
   const findMetaMaskAccount = async () => {
     try {
       if (!metamaskWallet || !metamaskWallet.request) return null;
