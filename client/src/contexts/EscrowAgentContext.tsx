@@ -3,7 +3,8 @@ import { BigNumber, ethers } from "ethers";
 import { EscrowType } from "../types";
 import { EscrowStatus } from "../types/enums";
 import { SnackbarContext } from "./SnackbarContext";
-import { CONTRACT_ADDRESS, CONTRACT_JSON } from "../constants";
+import { CONTRACT_ADDRESS } from "../constants";
+import CONTRACT_JSON from "../constants/EscrowAgentContract.json";
 
 type EscrowAgentContextType = {
   metamaskWallet: any;
