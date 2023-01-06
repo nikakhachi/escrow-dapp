@@ -1,9 +1,10 @@
 import { createContext, useState, PropsWithChildren, useEffect } from "react";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import EscrowAgentJson from "../artifacts/contracts/EscrowAgent.sol/EscrowAgent.json";
 import { EscrowType } from "../types";
+import { EscrowStatus } from "../types/enums";
 
-const CONTRACT_ADDRESS = "0x0EAd999B0fb9D9dd6F64Ef3C83F367B34312913E";
+const CONTRACT_ADDRESS = "0x62bb64aE30C1DB61da508e4f4971dbEA71312dea";
 
 type EscrowAgentContextType = {
   metamaskWallet: any;
@@ -28,6 +29,7 @@ type EscrowAgentContextType = {
   currentAgent?: string;
   currentAgentFeePercentage?: number;
   withdrawableFundsInETH?: number;
+  setEventHandlers: () => void;
 };
 
 export const EscrowAgentContext = createContext<EscrowAgentContextType | null>(null);
@@ -55,12 +57,6 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
         fetchAndUpdateContractData();
       }
     })();
-    setTimeout(() => {
-      setIsMining(true);
-      setTimeout(() => {
-        setIsMining(false);
-      }, 5000);
-    }, 2000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -257,6 +253,71 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     }
   };
 
+  const setEventHandlers = () => {
+    const contract = getContract(getSigner());
+    contract.provider.once("block", () => {
+      contract.on(
+        "EscrowInitiated",
+        (
+          id: BigNumber,
+          seller: string,
+          buyer: string,
+          depositAmount: BigNumber,
+          status: EscrowStatus,
+          agentFeePercentage: number,
+          description: string,
+          createdAt: BigNumber,
+          updatedAt: BigNumber
+        ) => {
+          setEscrows((prevState) =>
+            [
+              {
+                seller,
+                buyer,
+                id: id.toNumber(),
+                depositAmountInEth: Number(ethers.utils.formatEther(depositAmount)),
+                status,
+                agentFeePercentage,
+                description,
+                createdAt: new Date(createdAt.toNumber() * 1000),
+                updatedAt: new Date(updatedAt.toNumber() * 1000),
+              },
+              ...prevState,
+            ].sort((a: EscrowType, b: EscrowType) => b.updatedAt.valueOf() - a.updatedAt.valueOf())
+          );
+        }
+      );
+      const escrowStatusChangeHandler = async (id: BigNumber, timestamp: BigNumber, status: EscrowStatus) => {
+        setEscrows((prevState) =>
+          prevState
+            .map((escrow) => {
+              if (escrow.id === id.toNumber()) {
+                return { ...escrow, status, updatedAt: new Date(timestamp.toNumber() * 1000) };
+              }
+              return escrow;
+            })
+            .sort((a: EscrowType, b: EscrowType) => b.updatedAt.valueOf() - a.updatedAt.valueOf())
+        );
+        if (status === EscrowStatus.APPROVED) {
+          const withdrawableFundsRes = await contract.withdrawableFunds();
+          setWithdrawableFundsInETH(Number(ethers.utils.formatEther(withdrawableFundsRes)));
+        }
+      };
+      contract.on("EscrowDeposited", (id: BigNumber, timestamp: BigNumber) =>
+        escrowStatusChangeHandler(id, timestamp, EscrowStatus.DEPOSITED)
+      );
+      contract.on("EscrowApproved", (id: BigNumber, timestamp: BigNumber) =>
+        escrowStatusChangeHandler(id, timestamp, EscrowStatus.APPROVED)
+      );
+      contract.on("EscrowRejected", (id: BigNumber, timestamp: BigNumber) =>
+        escrowStatusChangeHandler(id, timestamp, EscrowStatus.REJECTED)
+      );
+      contract.on("EscrowArchived", (id: BigNumber, timestamp: BigNumber) =>
+        escrowStatusChangeHandler(id, timestamp, EscrowStatus.ARCHIVED)
+      );
+    });
+  };
+
   const value = {
     metamaskWallet,
     metamaskAccount,
@@ -280,6 +341,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
     currentAgent,
     currentAgentFeePercentage,
     withdrawableFundsInETH,
+    setEventHandlers,
   };
 
   return <EscrowAgentContext.Provider value={value}>{children}</EscrowAgentContext.Provider>;

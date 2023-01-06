@@ -2,6 +2,22 @@
 pragma solidity 0.8.17;
 
 contract EscrowAgent {
+    event EscrowInitiated(
+        uint id, 
+        address seller, 
+        address buyer, 
+        uint depositAmount, 
+        EscrowStatus status, 
+        uint8 agentFeePercentage, 
+        string description, 
+        uint createdAt, 
+        uint updatedAt
+    );
+    event EscrowDeposited(uint id, uint timestamp);
+    event EscrowApproved(uint id, uint timestamp);
+    event EscrowRejected(uint id, uint timestamp);
+    event EscrowArchived(uint id, uint timestamp);
+
     address public agent;
     uint8 public agentFeePercentage = 10;
     uint public withdrawableFunds;
@@ -51,6 +67,16 @@ contract EscrowAgent {
             );
     
         escrows.push(escrow);
+        emit EscrowInitiated(                
+                newEscrowId, 
+                _seller, 
+                _buyer, 
+                _depositAmount, 
+                EscrowStatus.PENDING, 
+                agentFeePercentage,
+                _description,
+                block.timestamp,
+                block.timestamp);
     }
 
     function depositEscrow(uint _escrowId) external payable {
@@ -60,6 +86,7 @@ contract EscrowAgent {
         require(msg.value == escrow.depositAmount, "Deposit must be equal to escrow's needed amount");
         escrow.status = EscrowStatus.DEPOSITED;
         escrow.updatedAt = block.timestamp;
+        emit EscrowDeposited(_escrowId, block.timestamp);
     }
 
     function approveEscrow(uint _escrowId) external onlyAgent {
@@ -71,6 +98,7 @@ contract EscrowAgent {
         escrow.status = EscrowStatus.APPROVED;
         escrow.updatedAt = block.timestamp;
         withdrawableFunds += agentFee;
+        emit EscrowApproved(_escrowId, block.timestamp);
     }
 
     function rejectEscrow(uint _escrowId) external onlyAgent {
@@ -80,6 +108,7 @@ contract EscrowAgent {
         require(sent, "Failed to send Ether");
         escrow.status = EscrowStatus.REJECTED;
         escrow.updatedAt = block.timestamp;
+        emit EscrowRejected(_escrowId, block.timestamp);
     }
 
     function archiveEscrow(uint _escrowId) external onlyAgent{
@@ -87,6 +116,7 @@ contract EscrowAgent {
         require(escrow.status == EscrowStatus.PENDING, "Can't archive active Escrow");
         escrow.status = EscrowStatus.ARCHIVED;
         escrow.updatedAt = block.timestamp;
+        emit EscrowArchived(_escrowId, block.timestamp);
     }
 
     function getAllEscrows() external view returns (Escrow[] memory){
