@@ -1,8 +1,9 @@
-import { createContext, useState, PropsWithChildren, useEffect } from "react";
+import { createContext, useState, PropsWithChildren, useEffect, useContext } from "react";
 import { BigNumber, ethers } from "ethers";
 import EscrowAgentJson from "../artifacts/contracts/EscrowAgent.sol/EscrowAgent.json";
 import { EscrowType } from "../types";
 import { EscrowStatus } from "../types/enums";
+import { SnackbarContext } from "./SnackbarContext";
 
 const CONTRACT_ADDRESS = "0x62bb64aE30C1DB61da508e4f4971dbEA71312dea";
 
@@ -35,6 +36,8 @@ type EscrowAgentContextType = {
 export const EscrowAgentContext = createContext<EscrowAgentContextType | null>(null);
 
 export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const snackbarContext = useContext(SnackbarContext);
+
   const metamaskWallet = window.ethereum;
   const [metamaskAccount, setMetamaskAccount] = useState();
   const [isLoading, setIsLoading] = useState(true);
@@ -285,6 +288,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
               ...prevState,
             ].sort((a: EscrowType, b: EscrowType) => b.updatedAt.valueOf() - a.updatedAt.valueOf())
           );
+          snackbarContext?.open("New Escrow has been created", "success");
         }
       );
       const escrowStatusChangeHandler = async (id: BigNumber, timestamp: BigNumber, status: EscrowStatus) => {
@@ -301,6 +305,13 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
         if (status === EscrowStatus.APPROVED) {
           const withdrawableFundsRes = await contract.withdrawableFunds();
           setWithdrawableFundsInETH(Number(ethers.utils.formatEther(withdrawableFundsRes)));
+          snackbarContext?.open(`Escrow ID ${id.toNumber()} has been approved`, "success");
+        } else if (status === EscrowStatus.DEPOSITED) {
+          snackbarContext?.open(`Escrow ID ${id.toNumber()} has been deposited`, "success");
+        } else if (status === EscrowStatus.ARCHIVED) {
+          snackbarContext?.open(`Escrow ID ${id.toNumber()} has been archived`, "warning");
+        } else if (status === EscrowStatus.REJECTED) {
+          snackbarContext?.open(`Escrow ID ${id.toNumber()} has been rejected`, "error");
         }
       };
       contract.on("EscrowDeposited", (id: BigNumber, timestamp: BigNumber) =>
