@@ -257,6 +257,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       const txn = await contract.withdrawFunds();
       setIsMining(true);
       await txn.wait();
+      setWithdrawableFundsInETH(0);
     } catch (error: any) {
       alert(error);
     } finally {
