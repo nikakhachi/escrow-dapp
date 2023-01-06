@@ -5,9 +5,6 @@ import "dotenv/config";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.17",
-  paths: {
-    artifacts: "./client/src/artifacts",
-  },
   networks: {
     goerli: {
       url: process.env.GOERLI_ALCHEMY_URL,
