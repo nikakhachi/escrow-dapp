@@ -221,6 +221,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       const txn = await contract.changeAgent(newAgentAddress);
       setIsMining(true);
       await txn.wait();
+      setCurrentAgent(newAgentAddress);
     } catch (error: any) {
       alert(error);
     } finally {
@@ -234,6 +235,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       const txn = await contract.changeAgentFeePercentage(newPercentageFee);
       setIsMining(true);
       await txn.wait();
+      setCurrentAgentFeePercentage(newPercentageFee);
     } catch (error: any) {
       alert(error);
     } finally {
