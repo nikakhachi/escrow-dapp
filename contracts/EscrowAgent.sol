@@ -17,6 +17,9 @@ contract EscrowAgent {
     event EscrowApproved(uint id, uint timestamp);
     event EscrowRejected(uint id, uint timestamp);
     event EscrowArchived(uint id, uint timestamp);
+    event AgentChanged(address newAgent);
+    event AgentFeePercentageUpdated(uint8 newAgentFeePercentage);
+    event FundsWithdrawn(uint amount);
 
     address public agent;
     uint8 public agentFeePercentage = 10;
@@ -130,15 +133,18 @@ contract EscrowAgent {
     function changeAgentFeePercentage(uint8 _newFeePercentage) external onlyAgent {
         require(_newFeePercentage >= 0 && _newFeePercentage < 100, "Value should be non-decimal in range of 0 and 99");
         agentFeePercentage = _newFeePercentage;
+        emit AgentFeePercentageUpdated(_newFeePercentage);
     }
 
     function withdrawFunds() external onlyAgent {
         (bool sent,) = agent.call{value: withdrawableFunds}("");
         require(sent, "Failed to send Ether");    
         withdrawableFunds = 0;
+        emit FundsWithdrawn(withdrawableFunds);
     }
 
     function changeAgent(address _newAgent) external onlyAgent {
         agent = _newAgent;
+        emit AgentChanged(_newAgent);
     }
 }

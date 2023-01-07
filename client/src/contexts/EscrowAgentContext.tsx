@@ -337,6 +337,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       contract.on("EscrowArchived", (id: BigNumber, timestamp: BigNumber) =>
         escrowStatusChangeHandler(id, timestamp, EscrowStatus.ARCHIVED)
       );
+      contract.on("FundsWithdrawn", () => setWithdrawableFundsInETH(0));
+      contract.on("AgentChanged", (newAgent: string) => setCurrentAgent(newAgent));
+      contract.on("AgentFeePercentageUpdated", (newAgentFeePercentage: number) => setCurrentAgentFeePercentage(newAgentFeePercentage));
     });
   };
 
