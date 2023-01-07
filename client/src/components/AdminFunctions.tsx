@@ -2,10 +2,12 @@ import { Grid, TextField, Divider, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useContext, useState } from "react";
 import { EscrowAgentContext } from "../contexts/EscrowAgentContext";
+import { SnackbarContext } from "../contexts/SnackbarContext";
 import ButtonText from "./ButtonText";
 
 const AdminFunctions = () => {
   const escrowAgentContext = useContext(EscrowAgentContext);
+  const snackbarContext = useContext(SnackbarContext);
 
   const [newAgent, setNewAgent] = useState("");
   const [newAgentPercentageFee, setNewAgentPercentageFee] = useState(0);
@@ -41,7 +43,7 @@ const AdminFunctions = () => {
         <Grid item xs={12}>
           <Button
             onClick={() => {
-              if (!newAgent) return alert("Field is missing");
+              if (!newAgent) return snackbarContext?.open("Fields are missing!", "error");
               escrowAgentContext?.changeAgent(newAgent);
             }}
             disabled={escrowAgentContext?.isMining}
@@ -70,8 +72,9 @@ const AdminFunctions = () => {
           <Grid item xs={12}>
             <Button
               onClick={() => {
-                if (!newAgentPercentageFee) return alert("Field is missing");
-                if (newAgentPercentageFee < 0 || newAgentPercentageFee >= 100) return alert("Number should be between 0 and 99");
+                if (!newAgentPercentageFee) return snackbarContext?.open("Fields are missing!", "error");
+                if (newAgentPercentageFee < 0 || newAgentPercentageFee >= 100)
+                  return snackbarContext?.open("Number should be between 0 and 99", "error");
                 escrowAgentContext?.updateAgentPercentageFee(newAgentPercentageFee);
               }}
               disabled={escrowAgentContext?.isMining}

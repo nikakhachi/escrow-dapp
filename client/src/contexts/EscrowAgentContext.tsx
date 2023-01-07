@@ -38,7 +38,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
   const snackbarContext = useContext(SnackbarContext);
 
   const metamaskWallet = window.ethereum;
-  const [metamaskAccount, setMetamaskAccount] = useState();
+  const [metamaskAccount, setMetamaskAccount] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
   const [isNetworkGoerli, setIsNetworkGoerli] = useState<boolean>();
   const [contract, setContract] = useState<ethers.Contract>();
@@ -167,6 +167,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
+      if (!areAgentAndLoggedAccountEqual()) {
+        return snackbarContext?.open("You should be the agent to initiate an escrow", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -180,6 +183,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
+      if (!areAgentAndLoggedAccountEqual()) {
+        return snackbarContext?.open("You should be the active agent to approve the escrow", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -193,6 +199,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
+      if (!areAgentAndLoggedAccountEqual()) {
+        return snackbarContext?.open("You should be the active agent to reject the escrow", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -206,6 +215,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error) {
+      if (!areAgentAndLoggedAccountEqual()) {
+        return snackbarContext?.open("You should be the active agent to archive the escrow", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -219,6 +231,10 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       setIsMining(true);
       await txn.wait();
     } catch (error: any) {
+      const escrowBuyerAddress = escrows.find((item) => item.id === escrowId)?.buyer;
+      if (metamaskAccount?.toLowerCase() !== escrowBuyerAddress?.toLowerCase()) {
+        return snackbarContext?.open("You should be the buyer to deposit to the escrow", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -233,6 +249,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       await txn.wait();
       setCurrentAgent(newAgentAddress);
     } catch (error: any) {
+      if (!areAgentAndLoggedAccountEqual()) {
+        return snackbarContext?.open("You should be the active agent to change the agent address", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -247,6 +266,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       await txn.wait();
       setCurrentAgentFeePercentage(newPercentageFee);
     } catch (error: any) {
+      if (!areAgentAndLoggedAccountEqual()) {
+        return snackbarContext?.open("You should be the agent to update the fee percentage", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -261,6 +283,9 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       await txn.wait();
       setWithdrawableFundsInETH(0);
     } catch (error: any) {
+      if (!areAgentAndLoggedAccountEqual()) {
+        return snackbarContext?.open("You should be the agent to withdraw the funds", "error");
+      }
       alert(error);
     } finally {
       setIsMining(false);
@@ -341,6 +366,10 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
       contract.on("AgentChanged", (newAgent: string) => setCurrentAgent(newAgent));
       contract.on("AgentFeePercentageUpdated", (newAgentFeePercentage: number) => setCurrentAgentFeePercentage(newAgentFeePercentage));
     });
+  };
+
+  const areAgentAndLoggedAccountEqual = () => {
+    return metamaskAccount?.toLowerCase() === currentAgent?.toLowerCase();
   };
 
   const value = {

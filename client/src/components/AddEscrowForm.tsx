@@ -2,10 +2,12 @@ import { Grid, TextField, CircularProgress } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useContext, useState } from "react";
 import { EscrowAgentContext } from "../contexts/EscrowAgentContext";
+import { SnackbarContext } from "../contexts/SnackbarContext";
 import ButtonText from "./ButtonText";
 
 const AddEscrowForm = () => {
   const escrowAgentContext = useContext(EscrowAgentContext);
+  const snackbarContext = useContext(SnackbarContext);
 
   const [buyer, setBuyer] = useState("");
   const [seller, setSeller] = useState("");
@@ -13,7 +15,7 @@ const AddEscrowForm = () => {
   const [description, setDescription] = useState("");
 
   const handleSubmit = () => {
-    if (!buyer || !seller || !depositAmountInEth) return alert("Fields are missing");
+    if (!buyer || !seller || !depositAmountInEth) return snackbarContext?.open("Fields are missing!", "error");
     escrowAgentContext?.initiateEscrow(seller, buyer, depositAmountInEth, description);
   };
 
