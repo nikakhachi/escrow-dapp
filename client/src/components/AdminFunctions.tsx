@@ -29,6 +29,17 @@ const AdminFunctions = () => {
           <strong>Withdrawable Funds:</strong> {escrowAgentContext?.withdrawableFundsInETH} ETH
         </Typography>
       </Grid>
+      <Grid item xs={12} sx={{ margin: "-0.5rem 0 1rem 0" }}>
+        <Button
+          onClick={escrowAgentContext?.withdrawFunds}
+          disabled={escrowAgentContext?.isMining}
+          color="primary"
+          variant="contained"
+          size="small"
+        >
+          <ButtonText text={"Withdraw Funds"} />
+        </Button>
+      </Grid>
       <Grid container item xs={12} sm={6} spacing={1}>
         <Grid item xs={12}>
           <TextField
@@ -87,18 +98,6 @@ const AdminFunctions = () => {
             </Button>
           </Grid>
         </Grid>
-      </Grid>
-      <Grid item xs={12} sm={6} md={4}>
-        <Button
-          onClick={escrowAgentContext?.withdrawFunds}
-          disabled={escrowAgentContext?.isMining}
-          fullWidth
-          color="primary"
-          variant="contained"
-          size="small"
-        >
-          <ButtonText text={"Withdraw Funds"} />
-        </Button>
       </Grid>
     </Grid>
   );
