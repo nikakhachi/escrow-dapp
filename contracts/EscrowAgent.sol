@@ -1,59 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-contract EscrowAgent {
-    event EscrowInitiated(
-        uint id, 
-        address seller, 
-        address buyer, 
-        uint depositAmount, 
-        EscrowStatus status, 
-        uint8 agentFeePercentage, 
-        string description, 
-        uint createdAt, 
-        uint updatedAt
-    );
-    event EscrowDeposited(uint id, uint timestamp);
-    event EscrowApproved(uint id, uint timestamp);
-    event EscrowRejected(uint id, uint timestamp);
-    event EscrowArchived(uint id, uint timestamp);
-    event AgentChanged(address newAgent);
-    event AgentFeePercentageUpdated(uint8 newAgentFeePercentage);
-    event FundsWithdrawn(uint amount);
+import './EscrowBase.sol';
+import './EscrowAdmin.sol';
 
-    address public agent;
-    uint8 public agentFeePercentage = 10;
-    uint public withdrawableFunds;
-
-    enum EscrowStatus{ PENDING, DEPOSITED, APPROVED, REJECTED, ARCHIVED }
-
-	struct Escrow {
-        uint id;
-        address seller;
-        address buyer;
-        uint depositAmount;
-        EscrowStatus status;
-        uint8 agentFeePercentage;
-        string description;
-        uint createdAt;
-        uint updatedAt;
-    }
-
-    Escrow[] public escrows;
-
-    constructor(){
-        agent = msg.sender;
-    } 
-
-    modifier onlyAgent {
-        require(msg.sender == agent, "Only Agent can call this function");
-        _;
-    }
-
-    modifier differentBuyerAndSeller(address _seller, address _buyer) {
-        require(_seller != _buyer, "Buyer and Seller should be Different");
-        _;
-    }
+contract EscrowAgent is EscrowBase, EscrowAdmin {
 
     function initiateEscrow(address _seller, address _buyer, uint _depositAmount, string memory _description) external onlyAgent differentBuyerAndSeller(_seller, _buyer) {
         uint newEscrowId = escrows.length;
@@ -128,23 +79,5 @@ contract EscrowAgent {
 
     function getEscrowById(uint _escrowId) external view returns (Escrow memory){
         return escrows[_escrowId];
-    }
-
-    function changeAgentFeePercentage(uint8 _newFeePercentage) external onlyAgent {
-        require(_newFeePercentage >= 0 && _newFeePercentage < 100, "Value should be non-decimal in range of 0 and 99");
-        agentFeePercentage = _newFeePercentage;
-        emit AgentFeePercentageUpdated(_newFeePercentage);
-    }
-
-    function withdrawFunds() external onlyAgent {
-        (bool sent,) = agent.call{value: withdrawableFunds}("");
-        require(sent, "Failed to send Ether");    
-        withdrawableFunds = 0;
-        emit FundsWithdrawn(withdrawableFunds);
-    }
-
-    function changeAgent(address _newAgent) external onlyAgent {
-        agent = _newAgent;
-        emit AgentChanged(_newAgent);
     }
 }
