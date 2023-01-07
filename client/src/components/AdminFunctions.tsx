@@ -1,4 +1,4 @@
-import { Grid, TextField, CircularProgress, Typography } from "@mui/material";
+import { Grid, TextField, Divider, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import { useContext, useState } from "react";
 import { EscrowAgentContext } from "../contexts/EscrowAgentContext";
@@ -14,7 +14,11 @@ const AdminFunctions = () => {
     <Grid container item xs={12} spacing={3}>
       <Grid item xs={12}>
         <Typography>
-          <strong>Current Agent:</strong> {escrowAgentContext?.currentAgent}
+          <strong>Logged in as:</strong> {escrowAgentContext?.metamaskAccount.toLowerCase()}
+        </Typography>
+        <Divider sx={{ margin: "0.5rem 0" }} />
+        <Typography>
+          <strong>Current Agent:</strong> {escrowAgentContext?.currentAgent?.toLowerCase()}
         </Typography>
         <Typography>
           <strong>Current Agent Fee:</strong> {escrowAgentContext?.currentAgentFeePercentage}%

@@ -58,6 +58,7 @@ export const EscrowAgentProvider: React.FC<PropsWithChildren> = ({ children }) =
         setIsLoading(false);
         fetchAndUpdateContractData();
       }
+      (metamaskWallet as any).on("accountsChanged", (accounts: any[]) => setMetamaskAccount(accounts[0]));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
